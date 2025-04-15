@@ -3,10 +3,10 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'dart:ui';
 
-import 'package:cached_network_image_platform_interface/cached_network_image_platform_interface.dart';
 import 'package:cached_network_image_platform_interface'
         '/cached_network_image_platform_interface.dart' as platform
     show ImageLoader;
+import 'package:cached_network_image_platform_interface/cached_network_image_platform_interface.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
@@ -14,7 +14,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 class ImageLoader implements platform.ImageLoader {
   @Deprecated('Use loadImageAsync instead')
   @override
-  Stream<ui.Codec> loadBufferAsync(
+  Stream<(ui.Codec?, String?)> loadBufferAsync(
     String url,
     String? cacheKey,
     StreamController<ImageChunkEvent> chunkEvents,
@@ -44,7 +44,7 @@ class ImageLoader implements platform.ImageLoader {
   }
 
   @override
-  Stream<ui.Codec> loadImageAsync(
+  Stream<(ui.Codec?, String?)> loadImageAsync(
     String url,
     String? cacheKey,
     StreamController<ImageChunkEvent> chunkEvents,
@@ -73,7 +73,7 @@ class ImageLoader implements platform.ImageLoader {
     );
   }
 
-  Stream<ui.Codec> _load(
+  Stream<(ui.Codec?, String?)> _load(
     String url,
     String? cacheKey,
     StreamController<ImageChunkEvent> chunkEvents,
@@ -121,8 +121,12 @@ class ImageLoader implements platform.ImageLoader {
         if (result is FileInfo) {
           final file = result.file;
           final bytes = await file.readAsBytes();
-          final decoded = await decode(bytes);
-          yield decoded;
+          if (file.path.endsWith(".svg")) {
+            yield (null, file.path);
+          } else {
+            final decoded = await decode(bytes);
+            yield (decoded, null);
+          }
         }
       }
     } on Object catch (error, stackTrace) {

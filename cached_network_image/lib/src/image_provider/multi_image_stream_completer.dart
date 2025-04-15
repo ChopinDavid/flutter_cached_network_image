@@ -16,7 +16,7 @@ class MultiImageStreamCompleter extends ImageStreamCompleter {
   /// [chunkEvents] should indicate the [ImageChunkEvent]s of the first image
   /// to show.
   MultiImageStreamCompleter({
-    required Stream<ui.Codec> codec,
+    required Stream<(ui.Codec?, String?)> codec,
     required double scale,
     Stream<ImageChunkEvent>? chunkEvents,
     InformationCollector? informationCollector,
@@ -24,10 +24,21 @@ class MultiImageStreamCompleter extends ImageStreamCompleter {
         _scale = scale {
     codec.listen(
       (event) {
-        if (_timer != null) {
-          _nextImageCodec = event;
-        } else {
-          _handleCodecReady(event);
+        final codec = event.$1;
+        final svgPath = event.$2;
+
+        if (svgPath != null) {
+          _svgListeners.forEach(
+            (element) {
+              element(svgPath);
+            },
+          );
+        } else if (codec != null) {
+          if (_timer != null) {
+            _nextImageCodec = codec;
+          } else {
+            _handleCodecReady(codec);
+          }
         }
       },
       onError: (Object error, StackTrace stack) {
@@ -61,6 +72,7 @@ class MultiImageStreamCompleter extends ImageStreamCompleter {
   final double _scale;
   final InformationCollector? _informationCollector;
   ui.FrameInfo? _nextFrame;
+  List<void Function(String)> _svgListeners = [];
 
   // When the current was first shown.
   Duration? _shownTimestamp;
@@ -185,6 +197,14 @@ class MultiImageStreamCompleter extends ImageStreamCompleter {
       _timer = null;
       __maybeDispose();
     }
+  }
+
+  void addSvgListener(void Function(String) listener) {
+    _svgListeners.add(listener);
+  }
+
+  void removeSvgListener(void Function(String) listener) {
+    _svgListeners.remove(listener);
   }
 
   int __keepAliveHandles = 0;

@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:baseflow_plugin_template/baseflow_plugin_template.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blurhash/flutter_blurhash.dart';
+import 'package:flutter_svg/svg.dart';
 
 void main() {
   CachedNetworkImage.logLevel = CacheManagerLogLevel.debug;
@@ -39,7 +41,7 @@ class BasicContent extends StatelessWidget {
           children: <Widget>[
             _blurHashImage(),
             _sizedContainer(
-              const Image(
+              Image(
                 image: CachedNetworkImageProvider(
                   'https://via.placeholder.com/350x150',
                 ),
@@ -52,8 +54,20 @@ class BasicContent extends StatelessWidget {
                     value: progress.progress,
                   ),
                 ),
+                svgBuilder: (context, svgUrl) {
+                  return FutureBuilder<Uint8List>(
+                    future: File(svgUrl).readAsBytes(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        return SvgPicture.memory(snapshot.data!);
+                      } else {
+                        return const CircularProgressIndicator();
+                      }
+                    },
+                  );
+                },
                 imageUrl:
-                    'https://images.unsplash.com/photo-1532264523420-881a47db012d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9',
+                    'https://www-dev.wwt.com/api-new/attachments/629fce4b24c1650083a8e0e3/thumbnail?inline=true&width=128&height=128&smart=true&strategy=preserveFeatureContentAndDimensions',
               ),
             ),
             _sizedContainer(

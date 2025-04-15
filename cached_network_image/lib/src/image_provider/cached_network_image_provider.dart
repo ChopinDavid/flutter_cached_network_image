@@ -3,11 +3,11 @@ import 'dart:ui' as ui show Codec;
 
 import 'package:cached_network_image/src/image_provider/multi_image_stream_completer.dart';
 import 'package:cached_network_image_platform_interface/cached_network_image_platform_interface.dart'
-    show ErrorListener, ImageRenderMethodForWeb;
-import 'package:cached_network_image_platform_interface/cached_network_image_platform_interface.dart'
     if (dart.library.io) '_image_loader.dart'
     if (dart.library.js_interop) 'package:cached_network_image_web/cached_network_image_web.dart'
     show ImageLoader;
+import 'package:cached_network_image_platform_interface/cached_network_image_platform_interface.dart'
+    show ErrorListener, ImageRenderMethodForWeb;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -19,7 +19,7 @@ class CachedNetworkImageProvider
     extends ImageProvider<CachedNetworkImageProvider> {
   /// Creates an ImageProvider which loads an image from the [url], using the [scale].
   /// When the image fails to load [errorListener] is called.
-  const CachedNetworkImageProvider(
+  CachedNetworkImageProvider(
     this.url, {
     this.maxHeight,
     this.maxWidth,
@@ -63,6 +63,10 @@ class CachedNetworkImageProvider
   /// Render option for images on the web platform.
   final ImageRenderMethodForWeb imageRenderMethodForWeb;
 
+  final StreamController<String> _svgStreamController =
+      StreamController<String>();
+  Stream<String> get svgStream => _svgStreamController.stream;
+
   @override
   Future<CachedNetworkImageProvider> obtainKey(
     ImageConfiguration configuration,
@@ -102,7 +106,7 @@ class CachedNetworkImageProvider
   }
 
   @Deprecated('_loadBufferAsync is deprecated, use _loadImageAsync instead')
-  Stream<ui.Codec> _loadBufferAsync(
+  Stream<(ui.Codec?, String?)> _loadBufferAsync(
     CachedNetworkImageProvider key,
     StreamController<ImageChunkEvent> chunkEvents,
     DecoderBufferCallback decode,
@@ -149,10 +153,16 @@ class CachedNetworkImageProvider
       );
     }
 
+    imageStreamCompleter.addSvgListener(
+      (p0) {
+        _svgStreamController.add(p0);
+      },
+    );
+
     return imageStreamCompleter;
   }
 
-  Stream<ui.Codec> _loadImageAsync(
+  Stream<(ui.Codec?, String?)> _loadImageAsync(
     CachedNetworkImageProvider key,
     StreamController<ImageChunkEvent> chunkEvents,
     ImageDecoderCallback decode,

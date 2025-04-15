@@ -12,6 +12,11 @@ typedef ImageWidgetBuilder = Widget Function(
   ImageProvider imageProvider,
 );
 
+typedef SvgWidgetBuilder = Widget Function(
+  BuildContext context,
+  String svgUrl,
+);
+
 /// Builder function to create a placeholder widget. The function is called
 /// once while the ImageProvider is loading the image.
 typedef PlaceholderWidgetBuilder = Widget Function(
@@ -74,6 +79,9 @@ class CachedNetworkImage extends StatelessWidget {
 
   /// Optional builder to further customize the display of the image.
   final ImageWidgetBuilder? imageBuilder;
+
+  /// Optional builder to handle svg data
+  final SvgWidgetBuilder? svgBuilder;
 
   /// Widget displayed while the target [imageUrl] is loading.
   final PlaceholderWidgetBuilder? placeholder;
@@ -214,6 +222,7 @@ class CachedNetworkImage extends StatelessWidget {
     required this.imageUrl,
     this.httpHeaders,
     this.imageBuilder,
+    this.svgBuilder,
     this.placeholder,
     this.progressIndicatorBuilder,
     this.errorWidget,
@@ -269,29 +278,38 @@ class CachedNetworkImage extends StatelessWidget {
       octoPlaceholderBuilder = (context) => Container();
     }
 
-    return OctoImage(
-      image: _image,
-      imageBuilder: imageBuilder != null ? _octoImageBuilder : null,
-      placeholderBuilder: octoPlaceholderBuilder,
-      progressIndicatorBuilder: octoProgressIndicatorBuilder,
-      errorBuilder: errorWidget != null ? _octoErrorBuilder : null,
-      fadeOutDuration: fadeOutDuration,
-      fadeOutCurve: fadeOutCurve,
-      fadeInDuration: fadeInDuration,
-      fadeInCurve: fadeInCurve,
-      width: width,
-      height: height,
-      fit: fit,
-      alignment: alignment,
-      repeat: repeat,
-      matchTextDirection: matchTextDirection,
-      color: color,
-      filterQuality: filterQuality,
-      colorBlendMode: colorBlendMode,
-      placeholderFadeInDuration: placeholderFadeInDuration,
-      gaplessPlayback: useOldImageOnUrlChange,
-      memCacheWidth: memCacheWidth,
-      memCacheHeight: memCacheHeight,
+    return StreamBuilder<String>(
+      stream: _image.svgStream,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return svgBuilder!(context, snapshot.data!);
+        } else {
+          return OctoImage(
+            image: _image,
+            imageBuilder: imageBuilder != null ? _octoImageBuilder : null,
+            placeholderBuilder: octoPlaceholderBuilder,
+            progressIndicatorBuilder: octoProgressIndicatorBuilder,
+            errorBuilder: errorWidget != null ? _octoErrorBuilder : null,
+            fadeOutDuration: fadeOutDuration,
+            fadeOutCurve: fadeOutCurve,
+            fadeInDuration: fadeInDuration,
+            fadeInCurve: fadeInCurve,
+            width: width,
+            height: height,
+            fit: fit,
+            alignment: alignment,
+            repeat: repeat,
+            matchTextDirection: matchTextDirection,
+            color: color,
+            filterQuality: filterQuality,
+            colorBlendMode: colorBlendMode,
+            placeholderFadeInDuration: placeholderFadeInDuration,
+            gaplessPlayback: useOldImageOnUrlChange,
+            memCacheWidth: memCacheWidth,
+            memCacheHeight: memCacheHeight,
+          );
+        }
+      },
     );
   }
 
