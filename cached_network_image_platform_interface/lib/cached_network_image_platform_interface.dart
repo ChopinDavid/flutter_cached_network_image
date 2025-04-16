@@ -26,7 +26,7 @@ class ImageLoader {
   /// loads the images async and gives the resulted codecs on a Stream. The
   /// Stream gives the option to show multiple images after each other.
   @Deprecated('Use loadImageAsync instead')
-  Stream<ui.Codec> loadBufferAsync(
+  Stream<(ui.Codec?, String?)> loadBufferAsync(
     String url,
     String? cacheKey,
     StreamController<ImageChunkEvent> chunkEvents,
@@ -43,7 +43,7 @@ class ImageLoader {
 
   /// loads the images async and gives the resulted codecs on a Stream. The
   /// Stream gives the option to show multiple images after each other.
-  Stream<ui.Codec> loadImageAsync(
+  Stream<(ui.Codec?, String?)> loadImageAsync(
     String url,
     String? cacheKey,
     StreamController<ImageChunkEvent> chunkEvents,
